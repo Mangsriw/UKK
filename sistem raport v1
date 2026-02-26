@@ -1,0 +1,249 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_ITEM 5
+
+typedef struct {
+    int nomor;
+    char nama_mapel[50];
+    int kkm;
+    int nilai;
+    char status[15];
+} Tabel;
+
+// ==== VARIABLE ====
+char nama[40];
+int nis;
+char kelas[20];
+char sekolah[100];
+
+int total;
+float rata;
+char grade;
+
+//====== FUNGSI ======
+void tampilTabel(Tabel t[]);
+void inputNilai(Tabel t[]);
+void tampilOutput(Tabel t[]);
+void resetNilai(Tabel t[]);
+void cetakRapor(Tabel t[]);
+
+int main()
+{
+    Tabel tabel[MAX_ITEM] = {
+        {1,"Pemrograman",78,0,""},
+        {2,"Basis Data",78,0,""},
+        {3,"PB",78,0,""},
+        {4,"Mapel Produktif",78,0,""},
+        {5,"Mapel Jurusan",78,0,""}
+    };
+
+    tampilTabel(tabel);
+
+    return 0;
+}
+
+void tampilTabel(Tabel t[]) {
+
+    printf("           Sistem Nilai Raport\n\n");
+    printf("-------------------------------------------------\n");
+    printf("| %-3s | %-20s | %-5s |\n","No","Nama Mapel","KKM");
+    printf("-------------------------------------------------\n");
+
+    for(int i = 0; i < MAX_ITEM; i++) {
+        printf("| %-3d | %-20s | %-5d |\n",
+           t[i].nomor,
+           t[i].nama_mapel,
+           t[i].kkm);
+    }
+
+    printf("-------------------------------------------------\n");
+
+    printf("\n=== INPUT DATA SISWA ===\n");
+
+    printf("Nama     : ");
+    fgets(nama, sizeof(nama), stdin);
+
+    printf("NIS      : ");
+    scanf("%d", &nis);
+    getchar();
+
+    printf("Kelas    : ");
+    fgets(kelas, sizeof(kelas), stdin);
+
+    printf("Sekolah  : ");
+    fgets(sekolah, sizeof(sekolah), stdin);
+
+    nama[strcspn(nama,"\n")] = 0;
+    kelas[strcspn(kelas,"\n")] = 0;
+    sekolah[strcspn(sekolah,"\n")] = 0;
+
+    system("cls"); // Windows
+    // system("clear"); // Linux/Mac
+
+    inputNilai(t);
+}
+
+void inputNilai(Tabel t[]) {
+
+    total = 0;
+
+    printf("=== INPUT NILAI MAPEL ===\n\n");
+
+    for (int i = 0; i < MAX_ITEM; i++) {
+
+        while(1) {
+
+            printf("Nilai %-20s : ", t[i].nama_mapel);
+
+            if(scanf("%d", &t[i].nilai) != 1) {
+                printf("Input harus berupa ANGKA!\n");
+
+                while(getchar() != '\n'); // bersihkan buffer
+            }
+            else if(t[i].nilai < 0 || t[i].nilai > 100) {
+                printf("Nilai harus antara 0 - 100!\n");
+            }
+            else {
+                break; // keluar loop kalau valid
+            }
+        }
+
+        total += t[i].nilai;
+
+        if(t[i].nilai >= t[i].kkm)
+            strcpy(t[i].status, "Lulus");
+        else
+            strcpy(t[i].status, "Tidak Lulus");
+    }
+
+    rata = total / (float)MAX_ITEM;
+
+    if(rata >= 90)
+        grade = 'A';
+    else if (rata >= 80)
+        grade = 'B';
+    else if (rata >= 70)
+        grade = 'C';
+    else if (rata >= 60)
+        grade = 'D';
+    else
+        grade = 'E';
+
+    system("cls");
+
+    tampilOutput(t);
+}
+
+void tampilOutput(Tabel t[]) {
+
+    char pilihan;
+
+    printf("\n=================== RAPOR SISWA ===================\n");
+    printf("Nama     : %s\n", nama);
+    printf("NIS      : %d\n", nis);
+    printf("Kelas    : %s\n", kelas);
+    printf("Sekolah  : %s\n", sekolah);
+    printf("---------------------------------------------------\n");
+
+    printf("| %-3s | %-20s | %-3s | %-5s | %-12s |\n",
+            "No","Nama Mapel","KKM","Nilai","Status");
+    printf("---------------------------------------------------\n");
+
+    for(int i = 0; i < MAX_ITEM; i++) {
+        printf("| %-3d | %-20s | %-3d | %-5d | %-12s |\n",
+            t[i].nomor,
+            t[i].nama_mapel,
+            t[i].kkm,
+            t[i].nilai,
+            t[i].status);
+    }
+
+    printf("---------------------------------------------------\n");
+    printf("Total Nilai : %d\n", total);
+    printf("Rata-rata   : %.2f\n", rata);
+    printf("Grade       : %c\n", grade);
+    printf("===================================================\n");
+
+    while(1){
+        printf("Apakah nilai sudah valid?\n");
+        printf("[Y] Cetak Raport\n");
+        printf("[N] Data Belum Valid\n");
+        printf("Pilih Y/N : ");
+        scanf(" %c",&pilihan);
+
+        if(pilihan == 'Y' || pilihan == 'y') {
+            cetakRapor(t);
+            break;
+        }
+        else if(pilihan == 'N' || pilihan == 'n') {
+            resetNilai(t);
+            system("cls");
+            inputNilai(t);
+            break;
+        }
+        else {
+            printf("\nInput tidak valid! Harus Y atau N.\n\n");
+        }
+    }
+}
+
+void resetNilai(Tabel t[]) {
+    for(int i = 0; i < MAX_ITEM; i++) {
+        t[i].nilai = 0;
+        strcpy(t[i].status, "");
+    }
+
+    total = 0;
+    rata = 0;
+    grade = '-';
+
+}
+
+void cetakRapor(Tabel t[]) {
+
+    char namaFile[50];
+
+    sprintf(namaFile,"Rapor_%d.txt",nis);
+    FILE *file = fopen(namaFile,"w");
+
+    if(file == NULL) {
+        printf("Gagal membuat file!\n");
+        return;
+    }
+
+    fprintf(file,"=================== RAPOR SISWA ===================\n");
+    fprintf(file,"Nama     : %s\n", nama);
+    fprintf(file,"NIS      : %d\n", nis);
+    fprintf(file,"Kelas    : %s\n", kelas);
+    fprintf(file,"Sekolah  : %s\n", sekolah);
+    fprintf(file,"---------------------------------------------------\n");
+
+    fprintf(file,"| %-3s | %-20s | %-3s | %-5s | %-12s |\n",
+            "No","Nama Mapel","KKM","Nilai","Status");
+    fprintf(file,"---------------------------------------------------\n");
+
+    for(int i = 0; i < MAX_ITEM; i++) {
+        fprintf(file,"| %-3d | %-20s | %-3d | %-5d | %-12s |\n",
+            t[i].nomor,
+            t[i].nama_mapel,
+            t[i].kkm,
+            t[i].nilai,
+            t[i].status);
+    }
+
+    fprintf(file,"---------------------------------------------------\n");
+    fprintf(file,"Total Nilai : %d\n", total);
+    fprintf(file,"Rata-rata   : %.2f\n", rata);
+    fprintf(file,"Grade       : %c\n", grade);
+    fprintf(file,"===================================================\n");
+
+    fclose(file);
+
+    printf("\nRapor berhasil dicetak\n");
+}
+
+
+
+
