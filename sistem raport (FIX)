@@ -1,0 +1,282 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_ITEM 5
+
+typedef struct {
+    int nomor;
+    char nama_mapel[50];
+    int kkm;
+    int nilai;
+    char status[20];
+} Mapel;
+
+typedef struct {
+    char nama [100];
+    int nis;
+    char kelas[20];
+    char sekolah[100];
+    int total;
+    float rata;
+    char grade;
+} Siswa;
+
+
+//fungsi
+void tampilTabel(Mapel m[]);
+void inputDataSiswa (Siswa *s);
+void inputNilai(Mapel m[], Siswa *s);
+void tampilOutput(Mapel m[], Siswa s);
+void resetNilai(Mapel m[], Siswa *s);
+void cetakRapor(Mapel m[], Siswa s);
+char hitungGrade(float rata);
+
+int main (){
+
+    Mapel mapel[MAX_ITEM] = {
+        {1,"PB",78,0,""},
+        {2,"Pemrograman",78,0,""},
+        {3,"Pembelajaran Produktif",78,0,""},
+        {4,"BD",78,0,""},
+        {5,"Matik",78,0,""},
+    };
+
+    Siswa siswa;
+
+    tampilTabel(mapel);
+    inputDataSiswa(&siswa);
+    inputNilai(mapel,&siswa);
+
+    return 0;
+}
+
+void tampilTabel(Mapel m[]){
+    printf("            Sistem Raport\n");
+    printf("------------------------------------\n");
+    printf("| %-3s | %-20s | %-5s |\n","No","Nama Mapel","KKM");
+    printf("------------------------------------\n");
+
+    for(int i = 0; i < MAX_ITEM; i++) {
+        printf("| %-3d | %-20s | %-5d\n",
+               m[i].nomor,
+               m[i].nama_mapel,
+               m[i].kkm);
+    }
+     printf("------------------------------------\n");
+}
+
+void inputDataSiswa(Siswa *s) {
+    printf("==== INPUT DATA SISWA ====\n");
+
+    while(1){
+        int valid = 1;
+        printf("Nama  : ");
+        fgets(s->nama,sizeof(s->nama),stdin);
+        s->nama[strcspn(s->nama,"\n")] = 0;
+
+        if(strlen(s->nama)== 0) {
+            printf("Nama tidak boleh kosong!\n\n");
+            continue;
+        }
+
+        for(int i=0; i<strlen(s->nama); i++){
+            if(isdigit(s->nama[i])){
+                valid = 0;
+                break;
+            }
+        }
+        if(valid) break;
+        printf("Nama tidak boleh mengandung angka\n");
+    }
+
+    while(1){
+        char inputNIS[20];
+        int valid = 1;
+
+        printf("NIS   : ");
+        fgets(inputNIS,sizeof(inputNIS),stdin);
+        inputNIS[strcspn(inputNIS,"\n")] = 0;
+
+        if(strlen(inputNIS) == 0) {
+            printf("NIS tidak boleh kosong\n\n");
+            continue;
+        }
+
+        for(int i=0; i<strlen(inputNIS); i++){
+            if(!isdigit(inputNIS[i])) {
+                valid = 0;
+                break;
+            }
+        }
+
+        if(valid){
+            s->nis = atoi(inputNIS);
+            break;
+        }
+        printf("NIS harus angka!\n\n");
+    }
+
+    printf("Kelas  : ");
+    fgets(s->kelas,sizeof(s->kelas),stdin);
+    s->kelas[strcspn(s->kelas,"\n")] = 0;
+
+    printf("Sekolah  : ");
+    fgets(s->sekolah,sizeof(s->sekolah),stdin);
+    s->sekolah[strcspn(s->sekolah,"\n")] = 0;
+
+    system("cls");
+}
+
+void inputNilai(Mapel m[], Siswa *s) {
+
+    while(1){
+        s->total = 0;
+
+        printf("=== INPUT NILAI MAPEL ===\n");
+        for(int i=0; i< MAX_ITEM; i++){
+            while(1){
+                printf("Nilai %-20s : ",m[i].nama_mapel);
+
+                if(scanf("%d",&m[i].nilai)!=1){
+                    printf("Input harus angka!\n");
+                    while(getchar()!='\n');
+                }
+                else if(m[i].nilai<0 || m[i].nilai>100){
+                    printf("Nilai 0-100\n");
+                }
+                else break;
+            }
+            s->total += m[i].nilai;
+
+            if(m[i].nilai >= m[i].kkm)
+                strcpy(m[i].status,"Lulus");
+            else
+                strcpy(m[i].status,"Tidak Lulus");
+        }
+
+        s->rata = s->total / (float)MAX_ITEM;
+        s->grade = hitungGrade(s->rata);
+
+        system("cls");
+        tampilOutput(m,*s);
+
+        char pilihan;
+
+        while(1){
+            printf("\nApakah data sudah benar?\n");
+            printf("[Y] Cetak Rapor\n");
+            printf("[N] Input Ulang Nilai\n");
+            printf("Pilih (Y/N): ");
+            scanf(" %c",&pilihan);
+
+            if(pilihan == 'Y' || pilihan == 'y'){
+                cetakRapor(m,*s);
+                return;
+            }
+            else if(pilihan == 'N' || pilihan == 'n'){
+                resetNilai(m,s);
+                system("cls");
+                break;
+            }
+            else{
+                printf("\nInput tidak valid harus Y/N\n");
+            }
+        }
+    }
+}
+
+// Hitung Grade
+char hitungGrade(float rata){
+    if (rata>=90) return 'A';
+    else if(rata>=80) return 'B';
+    else if(rata>=70) return 'C';
+    else if(rata>=60) return 'D';
+    else return 'E';
+}
+
+//tampiloutput
+void tampilOutput(Mapel m[], Siswa s){
+
+    printf("\n====================== RAPOR SISWA ====================\n");
+    printf("Nama    : %s\n", s.nama);
+    printf("NIS     : %d\n", s.nis);
+    printf("Kelas   : %s\n", s.kelas);
+    printf("Sekolah : %s\n", s.sekolah);
+    printf("---------------------------------------------------------\n");
+
+    printf("| %-3s | %-20s | %-3s | %-5s | %-12s |\n",
+           "No","Nama Mapel","KKM","Nilai","Status");
+    printf("---------------------------------------------------------\n");
+
+    for(int i=0; i<MAX_ITEM; i++){
+        printf("| %-3d | %-20s | %-3d | %-5d | %-12s |\n",
+               m[i].nomor,
+               m[i].nama_mapel,
+               m[i].kkm,
+               m[i].nilai,
+               m[i].status);
+    }
+
+    printf("----------------------------------------------------------\n");
+    printf("Total Nilai : %d\n", s.total);
+    printf("Rata-rata   : %.2f\n", s.rata);
+    printf("Grade       : %c\n", s.grade);
+    printf("==========================================================\n");
+}
+
+// reset nilai
+void resetNilai(Mapel m[], Siswa *s){
+
+    for(int i=0; i<MAX_ITEM; i++){
+        m[i].nilai = 0;
+        strcpy(m[i].status,"");
+    }
+
+    s->total = 0;
+    s->rata = 0;
+    s->grade = '-';
+}
+
+void cetakRapor(Mapel m[], Siswa s){
+
+    char namaFile[50];
+    sprintf(namaFile,"Rapor_%d.txt",s.nis);
+
+    FILE *file = fopen(namaFile, "w");
+    if(file==NULL){
+        printf("Gagal membuat file!\n");
+        return;
+    }
+
+    fprintf(file,"====================== RAPOR SISWA ====================\n");
+    fprintf(file,"Nama    : %s\n", s.nama);
+    fprintf(file,"NIS     : %d\n", s.nis);
+    fprintf(file,"Kelas   : %s\n", s.kelas);
+    fprintf(file,"Sekolah : %s\n", s.sekolah);
+    fprintf(file,"---------------------------------------------------------\n");
+
+    fprintf(file,"| %-3s | %-20s | %-3s | %-5s | %-12s |\n",
+           "No","Nama Mapel","KKM","Nilai","Status");
+    fprintf(file,"---------------------------------------------------------\n");
+
+    for(int i=0; i<MAX_ITEM; i++){
+        fprintf(file,"| %-3d | %-20s | %-3d | %-5d | %-12s |\n",
+               m[i].nomor,
+               m[i].nama_mapel,
+               m[i].kkm,
+               m[i].nilai,
+               m[i].status);
+    }
+
+    fprintf(file,"----------------------------------------------------------\n");
+    fprintf(file,"Total Nilai : %d\n", s.total);
+    fprintf(file,"Rata-rata   : %.2f\n", s.rata);
+    fprintf(file,"Grade       : %c\n", s.grade);
+    fprintf(file,"==========================================================\n");
+
+    fclose(file);
+
+    printf("\nRapor berhasil dicetak ke file\n");
+}
